@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/static/css/main.45ac91f7.css",
+    "main.js": "/static/js/main.33940ada.js",
+    "static/js/787.8f33cc30.chunk.js": "/static/js/787.8f33cc30.chunk.js",
+    "static/media/Palanquin-Regular.ttf": "/static/media/Palanquin-Regular.931de8a973ed6a499c8c.ttf",
+    "static/media/logo.png": "/static/media/logo.fff9cb3929aa99ab6c13.png",
+    "index.html": "/index.html",
+    "main.45ac91f7.css.map": "/static/css/main.45ac91f7.css.map",
+    "main.33940ada.js.map": "/static/js/main.33940ada.js.map",
+    "787.8f33cc30.chunk.js.map": "/static/js/787.8f33cc30.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.45ac91f7.css",
+    "static/js/main.33940ada.js"
+  ]
+}

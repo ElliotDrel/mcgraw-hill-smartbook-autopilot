@@ -111,13 +111,21 @@ async function selectCorrectResponse(question, responses, responseElements) {
     console.log("next button exists")
     // if review concept button
     let nextButtonCheck = document.getElementsByClassName("next-button-container")[0].getElementsByTagName("button")[0];
-    let reviewConceptButtonCheck = document.getElementsByClassName("btn btn-tertiary lr-tray-button")[0];
+    let reviewConceptButtonCheck = document.querySelector('[data-automation-id="lr-tray_reading-button"]');
     if (nextButtonCheck.hasAttribute('disabled')) {
       console.log("read about concept clicking")
-      reviewConceptButtonCheck.click();
+      if (reviewConceptButtonCheck) {
+        reviewConceptButtonCheck.click();
+      } else {
+        console.warn("Read About the Concept button not found");
+      }
       await sleep(1000);
-      let continueButton = document.getElementsByClassName("button-bar-wrapper")[0].getElementsByTagName("button")[0];
-      continueButton.click();
+      let continueButton = document.querySelector('[data-automation-id="reading-questions-button"]');
+      if (continueButton) {
+        continueButton.click();
+      } else {
+        console.warn("To Questions button not found");
+      }
     }
     await sleep(1000);
     nextButtonCheck.click();
@@ -233,12 +241,20 @@ async function selectCorrectResponse(question, responses, responseElements) {
   // move on to next question
   await sleep(Math.random() * 200 + 600);
   let nextButton = document.getElementsByClassName("next-button-container")[0].getElementsByTagName("button")[0];
-  let reviewConceptButton = document.getElementsByClassName("btn btn-tertiary lr-tray-button")[0];
+  let reviewConceptButton = document.querySelector('[data-automation-id="lr-tray_reading-button"]');
   if (nextButton.hasAttribute('disabled')) {
-    reviewConceptButton.click();
+    if (reviewConceptButton) {
+      reviewConceptButton.click();
+    } else {
+      console.warn("Read About the Concept button not found");
+    }
     await sleep(1000);
-    let continueButton = document.getElementsByClassName("button-bar-wrapper")[0].getElementsByTagName("button")[0];
-    continueButton.click();
+    let continueButton = document.querySelector('[data-automation-id="reading-questions-button"]');
+    if (continueButton) {
+      continueButton.click();
+    } else {
+      console.warn("To Questions button not found");
+    }
   }
   await sleep(500);
   nextButton.click();

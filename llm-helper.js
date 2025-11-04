@@ -2,7 +2,7 @@
 // Handles OpenAI API calls for answering homework questions
 //
 // FEATURES:
-// - Uses OpenAI's gpt-5-mini model for fast, cost-effective responses
+// - Uses OpenAI's gpt-4.1 model for high-quality responses
 // - Includes 'store: true' parameter to enable OpenAI request logging/storage
 // - Comprehensive console logging for debugging and monitoring
 // - 3-retry logic with exponential backoff for reliability
@@ -38,7 +38,7 @@ async function testAPIConnection() {
 
     // Make a minimal test call
     const testRequestBody = {
-      model: 'gpt-5-mini',
+      model: 'gpt-4.1',
       messages: [
         {
           role: 'user',
@@ -160,7 +160,7 @@ Rules:
       }
 
       const requestBody = {
-        model: 'gpt-5-mini',
+        model: 'gpt-4.1',
         messages: [
           {
             role: 'system',

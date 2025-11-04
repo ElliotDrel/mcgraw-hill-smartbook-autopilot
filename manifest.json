@@ -24,7 +24,7 @@
   "content_scripts": [
     {
       "matches": ["*://learning.mheducation.com/*"],
-      "js": ["autopilot.js", "highlight.js"]
+      "js": ["config.js", "llm-helper.js", "autopilot.js", "highlight.js"]
     }
   ]
 }

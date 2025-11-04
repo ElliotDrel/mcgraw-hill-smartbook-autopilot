@@ -160,10 +160,11 @@ async function selectCorrectResponse(question, responses, responseElements) {
     // document.querySelector('button.btn-confidence').removeAttribute('disabled');
     answerButton.click();
 
-  // answer is not already stored -> guess
+  // answer is not already stored -> guess (or use LLM)
   } else {
     let isFillInBlankQuestion = false;
     let isDragAndDrop = false;
+    let llmAnswer = null;
 
     // is fill in the blank question or drag and drop
     if (responseElements[0] == null) {
@@ -192,15 +193,61 @@ async function selectCorrectResponse(question, responses, responseElements) {
         }
       } else {
         isFillInBlankQuestion = true;
+        
+        // Try LLM for fill-in-blank
+        if (typeof askLLM === 'function') {
+          const llmResult = await askLLM(question, [], "fill_in_blank");
+          if (llmResult.success) {
+            llmAnswer = llmResult.answer;
+            console.log("🎯 Using LLM answer for fill-in-blank:", llmAnswer);
+            console.log("💭 LLM Reasoning:", llmResult.reasoning);
+          }
+        }
+        
         let blanks = document.getElementsByClassName("input-container span-to-div");
         for (let x = 0; x < blanks.length; x++) {
           let inputTag = blanks[x].getElementsByTagName("input")[0];
           inputTag.focus();
-          document.execCommand('insertText', false, "IDK");
+          // Use LLM answer if available, otherwise "IDK"
+          document.execCommand('insertText', false, llmAnswer || "IDK");
         }
       }
     } else {
-      responseElements[0].click();
+      // Multiple choice or true/false - try LLM first
+      if (typeof askLLM === 'function') {
+        const questionType = responses.length === 2 ? "true_false" : "multiple_choice";
+        const llmResult = await askLLM(question, responses, questionType);
+        
+        if (llmResult.success) {
+          llmAnswer = llmResult.answer;
+          console.log("🎯 Using LLM answer for multiple choice:", llmAnswer);
+          console.log("💭 LLM Reasoning:", llmResult.reasoning);
+          
+          // Try to find matching response
+          let foundMatch = false;
+          for (let i = 0; i < responses.length; i++) {
+            if (responses[i].trim() === llmAnswer.trim()) {
+              responseElements[i].click();
+              foundMatch = true;
+              console.log("✅ Matched LLM answer to choice", i);
+              break;
+            }
+          }
+          
+          // If no exact match, fall back to first option
+          if (!foundMatch) {
+            console.warn("⚠️ Could not match LLM answer exactly, defaulting to first option");
+            responseElements[0].click();
+          }
+        } else {
+          // LLM failed, use default behavior
+          console.log("⚠️ LLM failed, defaulting to first option");
+          responseElements[0].click();
+        }
+      } else {
+        // LLM not available, use default behavior
+        responseElements[0].click();
+      }
     }
 
     // submit answer

@@ -1,0 +1,19 @@
+# API Configuration (contains sensitive API keys)
+config.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Extension packaging
+*.zip
+*.crx
+*.pem
+

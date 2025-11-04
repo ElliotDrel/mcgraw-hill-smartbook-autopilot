@@ -2,7 +2,7 @@
 // Handles OpenAI API calls for answering homework questions
 //
 // FEATURES:
-// - Uses OpenAI's gpt-4o-mini model for fast, cost-effective responses
+// - Uses OpenAI's gpt-5-mini model for fast, cost-effective responses
 // - Includes 'store: true' parameter to enable OpenAI request logging/storage
 // - Comprehensive console logging for debugging and monitoring
 // - 3-retry logic with exponential backoff for reliability
@@ -38,7 +38,7 @@ async function testAPIConnection() {
 
     // Make a minimal test call
     const testRequestBody = {
-      model: 'gpt-4o-mini',
+      model: 'gpt-5-mini',
       messages: [
         {
           role: 'user',
@@ -46,7 +46,6 @@ async function testAPIConnection() {
         }
       ],
       temperature: 0,
-      max_tokens: 10,
       response_format: { type: "json_object" },
       store: true
     };
@@ -96,7 +95,7 @@ setTimeout(testAPIConnection, 500);
  * @param {string} question - The question text
  * @param {Array<string>} choices - Array of answer choices (can be empty for fill-in-blank)
  * @param {string} questionType - Type: "multiple_choice", "true_false", or "fill_in_blank"
- * @returns {Promise<{success: boolean, answer: string, reasoning: string}>}
+ * @returns {Promise<{success: boolean, choiceIndex: (number|null), choiceLetter: (string|null), answerText: string|null, reasoning: string|null}>}
  */
 async function askLLM(question, choices, questionType) {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -116,7 +115,8 @@ Question: ${question}
 
 This is a fill-in-the-blank question. Provide a single word or short phrase that best completes the question.
 
-Return JSON: {"answer": "your answer here", "reasoning": "brief explanation"}`;
+Return JSON with this exact shape (choice_index must be null for fill-in-the-blank):
+{"choice_letter": null, "choice_index": null, "answer_text": "your answer here", "reasoning": "brief explanation"}`;
   } else {
     // Multiple choice or true/false
     const choicesFormatted = choices.map((choice, idx) => {
@@ -131,7 +131,13 @@ Question: ${question}
 Choices:
 ${choicesFormatted}
 
-Return JSON: {"answer": "exact choice text from above", "reasoning": "brief explanation"}`;
+Return JSON with this exact shape:
+{"choice_letter": "A", "choice_index": 0, "answer_text": "exact choice text from above", "reasoning": "brief explanation"}
+
+Rules:
+- choice_index must be zero-based (0 for the first option, 1 for the second, etc.).
+- choice_letter must match the letter shown (A, B, C...).
+- answer_text must exactly match one of the provided choices.`;
   }
 
   // Retry logic with exponential backoff
@@ -146,20 +152,20 @@ Return JSON: {"answer": "exact choice text from above", "reasoning": "brief expl
       // Get API key from config
       if (typeof CONFIG === 'undefined' || !CONFIG.OPENAI_API_KEY) {
         console.error("❌ LLM Helper: CONFIG.OPENAI_API_KEY not found. Please set up config.js");
-        return { success: false, answer: null, reasoning: "API key not configured" };
+        return { success: false, choiceIndex: null, choiceLetter: null, answerText: null, reasoning: "API key not configured" };
       }
       
       if (CONFIG.OPENAI_API_KEY === "your-openai-api-key-here") {
         console.error("❌ LLM Helper: Please replace the placeholder API key in config.js with your actual OpenAI API key");
-        return { success: false, answer: null, reasoning: "API key not configured" };
+        return { success: false, choiceIndex: null, choiceLetter: null, answerText: null, reasoning: "API key not configured" };
       }
 
       const requestBody = {
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-mini',
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful homework assistant. Always respond with valid JSON containing "answer" and "reasoning" fields.'
+            content: 'You are a helpful homework assistant. Always respond with valid JSON containing the fields "choice_letter", "choice_index", "answer_text", and "reasoning".'
           },
           {
             role: 'user',
@@ -167,7 +173,6 @@ Return JSON: {"answer": "exact choice text from above", "reasoning": "brief expl
           }
         ],
         temperature: 0,
-        max_tokens: 500,
         response_format: { type: "json_object" },
         store: true  // Enable OpenAI request storage for debugging and logging
       };
@@ -198,7 +203,7 @@ Return JSON: {"answer": "exact choice text from above", "reasoning": "brief expl
         }
         
         // For other errors (auth, bad request), don't retry
-        return { success: false, answer: null, reasoning: `API error: ${response.status}` };
+        return { success: false, choiceIndex: null, choiceLetter: null, answerText: null, reasoning: `API error: ${response.status}` };
       }
 
       const data = await response.json();
@@ -220,15 +225,32 @@ Return JSON: {"answer": "exact choice text from above", "reasoning": "brief expl
       // Parse the response
       const messageContent = data.choices[0].message.content;
       const parsed = JSON.parse(messageContent);
-      
-      console.log("✅ LLM Helper: AI Answer:", parsed.answer);
-      console.log("💡 LLM Helper: AI Reasoning:", parsed.reasoning);
+
+      const choiceLetter = typeof parsed.choice_letter === 'string' ? parsed.choice_letter.trim() || null : null;
+      let choiceIndex = null;
+      if (typeof parsed.choice_index === 'number') {
+        choiceIndex = Number.isFinite(parsed.choice_index) ? parsed.choice_index : null;
+      } else if (typeof parsed.choice_index === 'string') {
+        const parsedIndex = parseInt(parsed.choice_index, 10);
+        if (!Number.isNaN(parsedIndex)) {
+          choiceIndex = parsedIndex;
+        }
+      }
+      const answerText = (parsed.answer_text || parsed.answer || null);
+      const reasoning = parsed.reasoning || null;
+
+      console.log("✅ LLM Helper: Choice Letter:", choiceLetter);
+      console.log("🔢 LLM Helper: Choice Index:", choiceIndex);
+      console.log("📝 LLM Helper: Answer Text:", answerText);
+      console.log("💡 LLM Helper: Reasoning:", reasoning);
       console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
       return {
         success: true,
-        answer: parsed.answer,
-        reasoning: parsed.reasoning
+        choiceIndex,
+        choiceLetter,
+        answerText,
+        reasoning
       };
 
     } catch (error) {
@@ -249,6 +271,6 @@ Return JSON: {"answer": "exact choice text from above", "reasoning": "brief expl
   console.error("❌ LLM Helper: FAILED - All 3 retry attempts exhausted");
   console.error("🔄 Falling back to default guessing behavior");
   console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  return { success: false, answer: null, reasoning: "All retry attempts failed" };
+  return { success: false, choiceIndex: null, choiceLetter: null, answerText: null, reasoning: "All retry attempts failed" };
 }
 

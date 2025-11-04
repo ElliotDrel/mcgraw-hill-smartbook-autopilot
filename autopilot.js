@@ -164,7 +164,9 @@ async function selectCorrectResponse(question, responses, responseElements) {
   } else {
     let isFillInBlankQuestion = false;
     let isDragAndDrop = false;
-    let llmAnswer = null;
+    let llmAnswerText = null;
+    let llmChoiceIndex = null;
+    let llmChoiceLetter = null;
 
     // is fill in the blank question or drag and drop
     if (responseElements[0] == null) {
@@ -198,8 +200,8 @@ async function selectCorrectResponse(question, responses, responseElements) {
         if (typeof askLLM === 'function') {
           const llmResult = await askLLM(question, [], "fill_in_blank");
           if (llmResult.success) {
-            llmAnswer = llmResult.answer;
-            console.log("🎯 Using LLM answer for fill-in-blank:", llmAnswer);
+            llmAnswerText = llmResult.answerText;
+            console.log("🎯 Using LLM answer for fill-in-blank:", llmAnswerText);
             console.log("💭 LLM Reasoning:", llmResult.reasoning);
           }
         }
@@ -209,7 +211,7 @@ async function selectCorrectResponse(question, responses, responseElements) {
           let inputTag = blanks[x].getElementsByTagName("input")[0];
           inputTag.focus();
           // Use LLM answer if available, otherwise "IDK"
-          document.execCommand('insertText', false, llmAnswer || "IDK");
+          document.execCommand('insertText', false, llmAnswerText || "IDK");
         }
       }
     } else {
@@ -219,24 +221,45 @@ async function selectCorrectResponse(question, responses, responseElements) {
         const llmResult = await askLLM(question, responses, questionType);
         
         if (llmResult.success) {
-          llmAnswer = llmResult.answer;
-          console.log("🎯 Using LLM answer for multiple choice:", llmAnswer);
+          llmChoiceIndex = Number.isInteger(llmResult.choiceIndex) ? llmResult.choiceIndex : null;
+          llmChoiceLetter = llmResult.choiceLetter;
+          llmAnswerText = llmResult.answerText;
+          console.log("🎯 Using LLM answer for multiple choice:", {
+            choiceLetter: llmChoiceLetter,
+            choiceIndex: llmChoiceIndex,
+            answerText: llmAnswerText
+          });
           console.log("💭 LLM Reasoning:", llmResult.reasoning);
           
           // Try to find matching response
-          let foundMatch = false;
-          for (let i = 0; i < responses.length; i++) {
-            if (responses[i].trim() === llmAnswer.trim()) {
-              responseElements[i].click();
-              foundMatch = true;
-              console.log("✅ Matched LLM answer to choice", i);
-              break;
+          let indexToClick = null;
+
+          if (llmChoiceIndex !== null && llmChoiceIndex >= 0 && llmChoiceIndex < responses.length) {
+            indexToClick = llmChoiceIndex;
+            console.log("✅ Using LLM choice_index", llmChoiceIndex);
+          } else if (llmChoiceLetter) {
+            const letterIndex = llmChoiceLetter.trim().toUpperCase().charCodeAt(0) - 65;
+            if (!Number.isNaN(letterIndex) && letterIndex >= 0 && letterIndex < responses.length) {
+              indexToClick = letterIndex;
+              console.log("✅ Derived index from choice_letter", llmChoiceLetter, "->", letterIndex);
             }
           }
-          
-          // If no exact match, fall back to first option
-          if (!foundMatch) {
-            console.warn("⚠️ Could not match LLM answer exactly, defaulting to first option");
+
+          if (indexToClick === null && llmAnswerText) {
+            const normalizedAnswer = llmAnswerText.trim().toLowerCase();
+            for (let i = 0; i < responses.length; i++) {
+              if (responses[i].trim().toLowerCase() === normalizedAnswer) {
+                indexToClick = i;
+                console.log("✅ Matched LLM answer_text to choice", i);
+                break;
+              }
+            }
+          }
+
+          if (indexToClick !== null) {
+            responseElements[indexToClick].click();
+          } else {
+            console.warn("⚠️ Could not match LLM response to any choice, defaulting to first option");
             responseElements[0].click();
           }
         } else {

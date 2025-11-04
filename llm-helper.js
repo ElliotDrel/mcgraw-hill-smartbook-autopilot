@@ -45,7 +45,6 @@ async function testAPIConnection() {
           content: 'Respond with JSON only: {"status":"ok"}'
         }
       ],
-      temperature: 0,
       response_format: { type: "json_object" },
       store: true
     };
@@ -59,7 +58,7 @@ async function testAPIConnection() {
         'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
       },
       body: JSON.stringify(testRequestBody),
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(30000)
     });
 
     if (!response.ok) {
@@ -172,7 +171,6 @@ Rules:
             content: prompt
           }
         ],
-        temperature: 0,
         response_format: { type: "json_object" },
         store: true  // Enable OpenAI request storage for debugging and logging
       };
@@ -187,7 +185,7 @@ Rules:
           'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
         },
         body: JSON.stringify(requestBody),
-        signal: AbortSignal.timeout(10000) // 10 second timeout
+        signal: AbortSignal.timeout(30000) // 30 second timeout to accommodate slower responses
       });
 
       if (!response.ok) {

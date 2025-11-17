@@ -2,7 +2,7 @@
 // Handles OpenAI API calls for answering homework questions
 //
 // FEATURES:
-// - Uses OpenAI's gpt-4.1 model for high-quality responses
+// - Uses OpenAI's gpt-5-mini model for high-quality responses
 // - Includes 'store: true' parameter to enable OpenAI request logging/storage
 // - Comprehensive console logging for debugging and monitoring
 // - 3-retry logic with exponential backoff for reliability
@@ -38,20 +38,23 @@ async function testAPIConnection() {
 
     // Make a minimal test call
     const testRequestBody = {
-      model: 'gpt-4.1',
-      messages: [
-        {
-          role: 'user',
-          content: 'Respond with JSON only: {"status":"ok"}'
-        }
-      ],
-      response_format: { type: "json_object" },
-      store: true
+      model: 'gpt-5-mini',
+      instructions: RESPONSE_SYSTEM_INSTRUCTIONS,
+      input: `Connection test. Output the required JSON schema with the following values exactly:
+choice_letter: "A"
+choice_index: 0
+answer_text: "Connection confirmed"
+reasoning: "Test request succeeded."`,
+      text: RESPONSE_TEXT_CONFIG,
+      reasoning: RESPONSE_REASONING_CONFIG,
+      tools: [],
+      store: true,
+      include: RESPONSE_INCLUDE_FIELDS
     };
 
     console.log("📤 Sending test request to OpenAI API...");
     
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(RESPONSES_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -74,7 +77,9 @@ async function testAPIConnection() {
     
     console.log("✅ API Test PASSED: OpenAI connection successful!");
     console.log("🆔 Test Request ID:", data.id);
-    console.log("📊 Test used", data.usage.total_tokens, "tokens");
+    if (data.usage) {
+      console.log("📊 Test used", data.usage.total_tokens, "tokens");
+    }
     console.log("🎯 LLM features are ready to use");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -88,6 +93,44 @@ async function testAPIConnection() {
 
 // Run test after a short delay to allow config to load
 setTimeout(testAPIConnection, 500);
+
+const RESPONSES_ENDPOINT = 'https://api.openai.com/v1/responses';
+
+const RESPONSE_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    choice_letter: { type: ['string', 'null'] },
+    choice_index: { type: ['integer', 'null'] },
+    answer_text: { type: 'string' },
+    reasoning: { type: 'string' }
+  },
+  required: ['choice_letter', 'choice_index', 'answer_text', 'reasoning'],
+  additionalProperties: false
+};
+
+const RESPONSE_TEXT_FORMAT = {
+  type: 'json_schema',
+  name: 'homework_response',
+  strict: true,
+  schema: RESPONSE_JSON_SCHEMA
+};
+
+const RESPONSE_TEXT_CONFIG = {
+  format: RESPONSE_TEXT_FORMAT,
+  verbosity: 'low'
+};
+
+const RESPONSE_REASONING_CONFIG = {
+  effort: 'low',
+  summary: 'auto'
+};
+
+const RESPONSE_INCLUDE_FIELDS = [
+  'reasoning.encrypted_content',
+  'web_search_call.action.sources'
+];
+
+const RESPONSE_SYSTEM_INSTRUCTIONS = 'You are a helpful homework assistant. Always respond with valid JSON containing the fields "choice_letter", "choice_index", "answer_text", and "reasoning".';
 
 /**
  * Call OpenAI API to get an answer for a homework question
@@ -160,25 +203,20 @@ Rules:
       }
 
       const requestBody = {
-        model: 'gpt-4.1',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful homework assistant. Always respond with valid JSON containing the fields "choice_letter", "choice_index", "answer_text", and "reasoning".'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        response_format: { type: "json_object" },
-        store: true  // Enable OpenAI request storage for debugging and logging
+        model: 'gpt-5-mini',
+        instructions: RESPONSE_SYSTEM_INSTRUCTIONS,
+        input: prompt,
+        text: RESPONSE_TEXT_CONFIG,
+        reasoning: RESPONSE_REASONING_CONFIG,
+        tools: [],
+        store: true,  // Enable OpenAI request storage for debugging and logging
+        include: RESPONSE_INCLUDE_FIELDS
       };
       
       console.log("📤 LLM Helper: Sending request to OpenAI with store=true (logging enabled)");
       console.log("📋 Request body:", JSON.stringify(requestBody, null, 2));
       
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch(RESPONSES_ENDPOINT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -210,8 +248,8 @@ Rules:
       
       // Log usage statistics
       if (data.usage) {
-        console.log("📊 Token usage - Prompt:", data.usage.prompt_tokens, 
-                    "| Completion:", data.usage.completion_tokens, 
+        console.log("📊 Token usage - Input:", data.usage.input_tokens, 
+                    "| Output:", data.usage.output_tokens, 
                     "| Total:", data.usage.total_tokens);
       }
       
@@ -221,7 +259,20 @@ Rules:
       }
 
       // Parse the response
-      const messageContent = data.choices[0].message.content;
+      const outputItems = Array.isArray(data.output) ? data.output : [];
+      const messageItem = outputItems.find(item => item.type === 'message');
+      const messageContent = messageItem && Array.isArray(messageItem.content)
+        ? messageItem.content
+            .filter(part => part.type === 'output_text' && typeof part.text === 'string')
+            .map(part => part.text)
+            .join('\n')
+            .trim()
+        : null;
+
+      if (!messageContent) {
+        throw new Error('LLM Helper: No response content returned from model');
+      }
+
       const parsed = JSON.parse(messageContent);
 
       const choiceLetter = typeof parsed.choice_letter === 'string' ? parsed.choice_letter.trim() || null : null;

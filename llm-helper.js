@@ -121,7 +121,7 @@ const RESPONSE_TEXT_CONFIG = {
 };
 
 const RESPONSE_REASONING_CONFIG = {
-  effort: 'low',
+  effort: 'medium',
   summary: 'auto'
 };
 

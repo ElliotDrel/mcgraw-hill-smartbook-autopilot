@@ -1,6 +1,19 @@
-# BetterBook
+# BetterBook — McGraw-Hill SmartBook Automation
 
-1. Download the installation ZIP and extract it to a folder you will keep.
+A Chrome extension that automatically works through McGraw-Hill SmartBook questions, remembers revealed answers, and optionally uses AI to answer new questions.
+
+## What it does
+
+- Read questions and answer choices on `learning.mheducation.com`.
+- Select or enter answers, submit them, and advance through questions while the bot is enabled.
+- Save revealed correct answers in your browser and reuse them when the same question appears again.
+- Highlight saved answers and let you review them as flashcards in the popup.
+- Use your own OpenAI API key for new multiple-choice, true/false, and fill-in-the-blank questions.
+- Work without a key by guessing on unseen questions and learning from the answers shown afterward.
+
+## Install and use
+
+1. [Download the installation ZIP](https://github.com/ElliotDrel/Better-Book-Chrome-Extension/releases/latest) and extract it to a folder you will keep.
 2. Open `chrome://extensions`, turn on **Developer mode**, choose **Load unpacked**, and select that folder.
 3. Skip the optional API key or save your own key in the Settings page that opens. Open your McGraw-Hill assignment, then open BetterBook from Chrome's extensions menu to enable it.
 

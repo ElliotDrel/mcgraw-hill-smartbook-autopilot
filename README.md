@@ -1,4 +1,4 @@
-# BetterBook - McGraw-Hill SmartBook Automation
+# McGraw-Hill SmartBook Autopilot
 
 A Chrome extension that automatically works through McGraw-Hill SmartBook questions, remembers revealed answers, and optionally uses AI to answer new questions.
 
@@ -13,9 +13,9 @@ A Chrome extension that automatically works through McGraw-Hill SmartBook questi
 
 ## Install and use
 
-1. [Download the installation ZIP](https://github.com/ElliotDrel/Better-Book-Chrome-Extension/releases/latest) and extract it to a folder you will keep.
+1. [Download the installation ZIP](https://github.com/ElliotDrel/mcgraw-hill-smartbook-autopilot/releases/latest) and extract it to a folder you will keep.
 2. Open `chrome://extensions`, turn on **Developer mode**, choose **Load unpacked**, and select that folder.
-3. Skip the optional API key or save your own key in the Settings page that opens. Open your McGraw-Hill assignment, then open BetterBook from Chrome's extensions menu to enable it.
+3. Skip the optional API key or save your own key in the Settings page that opens. Open your McGraw-Hill assignment, then open McGraw-Hill SmartBook Autopilot from Chrome's extensions menu to enable it.
 
 - Open **Settings / optional AI key** from the popup anytime to add or remove a key.
 - Use it without AI: it guesses on unseen questions and saves the revealed answers for later appearances.
@@ -26,7 +26,7 @@ A Chrome extension that automatically works through McGraw-Hill SmartBook questi
 ## Optional local environment setup
 
 - Use Python 3 to run `python package.py` to produce a key-free ZIP in `dist/`.
-- Copy `.env.example` to `.env`, set `OPENAI_API_KEY`, then run `python package.py --local` to create `dist/BetterBook-local/`. Load that folder in Chrome.
+- Copy `.env.example` to `.env`, set `OPENAI_API_KEY`, then run `python package.py --local` to create `dist/mcgraw-hill-smartbook-autopilot-local/`. Load that folder in Chrome.
 - Keep `.env` and local builds private. Chrome cannot read shell environment variables: the local build embeds the environment key in its ignored `config.js`. Public builds always use an empty default and never read `.env`.
 - Prefer Settings for normal use; no Python, environment files, or source editing is required.
 

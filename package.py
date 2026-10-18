@@ -30,15 +30,15 @@ def build(local=False):
     dest = ROOT / "dist"
     dest.mkdir(exist_ok=True)
     if local:
-        dest = dest / "BetterBook-local"
+        dest = dest / "mcgraw-hill-smartbook-autopilot-local"
         for name, content in files.items():
             path = dest / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(content)
-        print("Local extension ready in dist/BetterBook-local. Keep this folder private.")
+        print("Local extension ready in dist/mcgraw-hill-smartbook-autopilot-local. Keep this folder private.")
     else:
         version = json.loads(files["manifest.json"])["version"]
-        dest = dest / ("BetterBook-" + version + ".zip")
+        dest = dest / ("mcgraw-hill-smartbook-autopilot-" + version + ".zip")
         with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as archive:
             for name, content in files.items():
                 archive.writestr(name, content)

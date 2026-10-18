@@ -1,7 +1,7 @@
 {
-  "name": "BetterBook",
-  "description": "Free productivity and flashcard tool to assist with homework!",
-  "version": "1.0.6",
+  "name": "McGraw-Hill SmartBook Autopilot",
+  "description": "Automatically answer McGraw-Hill SmartBook questions, remember revealed answers, and optionally use your own OpenAI API key.",
+  "version": "1.0.7",
   "manifest_version": 3,
   "permissions": [
     "activeTab",
@@ -9,7 +9,7 @@
   ],
   "action": {
     "default_popup": "index.html",
-    "default_title": "Open the popup"
+    "default_title": "Open SmartBook Autopilot"
   },
   "icons": {
     "16": "logo.png",
@@ -34,5 +34,6 @@
   "options_page": "settings.html",
   "host_permissions": [
     "https://api.openai.com/*"
-  ]
+  ],
+  "short_name": "SmartBook Autopilot"
 }

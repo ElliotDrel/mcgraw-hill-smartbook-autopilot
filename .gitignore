@@ -1,5 +1,9 @@
-# API Configuration (contains sensitive API keys)
-config.js
+# Local credentials and generated builds
+.env
+.env.*
+!.env.example
+dist/
+__pycache__/
 
 # OS files
 .DS_Store

@@ -1,4 +1,4 @@
-# BetterBook — McGraw-Hill SmartBook Automation
+# BetterBook - McGraw-Hill SmartBook Automation
 
 A Chrome extension that automatically works through McGraw-Hill SmartBook questions, remembers revealed answers, and optionally uses AI to answer new questions.
 
